@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>책 반납/연장</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
+</head>
+<body>
+  <h1>📗 책 반납/연장</h1>
+  <form id="authForm">
+    이름: <input type="text" id="name"><br>
+    비밀번호: <input type="password" id="pw"><br>
+    <button type="submit">확인</button>
+  </form>
+  <div id="result"></div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB5r6Vp5dseDyqFKxmjZ3ReQncqR62022k",
+      authDomain: "bookrentalv2.firebaseapp.com",
+      projectId: "bookrentalv2",
+      storageBucket: "bookrentalv2.firebasestorage.app",
+      messagingSenderId: "83410489800",
+      appId: "1:83410489800:web:ce9b18509edb70873bb0fd"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById("authForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const pw = document.getElementById("pw").value;
+      const snap = await db.collection("books").where("borrower", "==", name).where("password", "==", pw).get();
+      if (!snap.empty) {
+        const book = snap.docs[0].data();
+        document.getElementById("result").innerHTML = `
+          <p><strong>${book.title}</strong>을(를) 선택하셨습니다.</p>
+          <p>대여일: ${book.borrowDate} / 반납 예정일: ${book.returnDate}</p>
+          <button onclick="returnBook('${snap.docs[0].id}', '${book.title}')">반납하기</button>
+        `;
+      } else {
+        alert("일치하지 않습니다.");
+      }
+    });
+
+    async function returnBook(id, title) {
+      await db.collection("books").doc(id).update({
+        available: true,
+        borrower: "",
+        org: "",
+        password: "",
+        borrowDate: "",
+        returnDate: "",
+        extendCount: 0
+      });
+      alert(`${title} 반납이 완료되었습니다. 감사합니다!`);
+      location.reload();
+    }
+  </script>
+</body>
+</html>

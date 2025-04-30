@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>책 대여</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
+</head>
+<body>
+  <h1>📕 책 대여하기</h1>
+  <form id="rentForm">
+    이름: <input type="text" id="name"><br>
+    소속: <input type="text" id="org"><br>
+    비밀번호(4자리): <input type="password" id="pw"><br>
+    책 제목: <input type="text" id="title"><br>
+    <button type="submit">대여하기</button>
+  </form>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB5r6Vp5dseDyqFKxmjZ3ReQncqR62022k",
+      authDomain: "bookrentalv2.firebaseapp.com",
+      projectId: "bookrentalv2",
+      storageBucket: "bookrentalv2.firebasestorage.app",
+      messagingSenderId: "83410489800",
+      appId: "1:83410489800:web:ce9b18509edb70873bb0fd"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById("rentForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const name = document.getElementById("name").value;
+      const org = document.getElementById("org").value;
+      const pw = document.getElementById("pw").value;
+      const returnDate = new Date();
+      returnDate.setDate(returnDate.getDate() + 20);
+      const docs = await db.collection("books").where("title", "==", title).get();
+      if (!docs.empty) {
+        const id = docs.docs[0].id;
+        await db.collection("books").doc(id).update({
+          available: false,
+          borrower: name,
+          org,
+          password: pw,
+          borrowDate: new Date().toISOString().split('T')[0],
+          returnDate: returnDate.toISOString().split('T')[0],
+          extendCount: 0
+        });
+        alert(`대여 완료! 반납일은 ${returnDate.toLocaleDateString()} 입니다.`);
+      } else {
+        alert("책을 찾을 수 없습니다.");
+      }
+    });
+  </script>
+</body>
+</html>
